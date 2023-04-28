@@ -1,0 +1,138 @@
+{% comment %}
+
+collection.liquid
+Main collection page wrapper
+-
+@package Headline
+
+{% endcomment %}
+
+<script type="text/javascript">
+  window.collectionType = "{{ collection.handle }}"
+</script>
+
+{% if collection.image != blank %}
+  <div class="o-section c-hero c-hero--collection">
+    <div class="l-constrained l-wide c-hero__inner">
+      <picture>
+        {% if collection.metafields.collection_hero.mobile_image != blank %}
+          <source srcset="{{ collection.metafields.collection_hero.mobile_image[0].cloudinary_src | append: 'w_768' }}" media="(max-width: 768px)" />
+        {% else %}
+          <source srcset="{{ collection.image | img_url: '768x350', crop: 'center' }} 1x, {{ collection.image | img_url: '768x350', crop: 'center', scale: 2 }} 2x" media="(max-width: 768px)" width="768" height="350"/>
+        {% endif %}
+
+        {{ collection.image | img_url: '1350x350', crop: 'center' | preload_tag: as: 'image' }}
+
+        <img class="c-hero__media-image" src="{{ collection.image | img_url: '1350x350', crop: 'center' }} 1x, {{ collection.image | img_url: '1350x350', crop: 'center', scale: 2 }} 2x" alt="{{ collection.title | strip | strip_html }}" width="{{ collection.image.width }}" height="{{ collection.image.height }}">
+      </picture>
+
+      <div class="o-section__content c-hero__content {% if collection.metafields.collection_hero.image_overlay == 'true' %}has-overlay{% endif %}">
+        <div class="l-constrained t-align-{{ collection.metafields.collection_hero.text_alignment | default: 'left' }}">
+          <h1 class="c-hero__title">
+            {{ collection.title }}
+          </h1>
+
+          <style>
+            .c-hero__title {
+              color: {{ collection.metafields.collection_hero.title_colour_mobile | default: '#fff' }};
+            }
+
+            @media screen and (min-width: 769px) {
+              .c-hero__title {
+                color: {{ collection.metafields.collection_hero.title_colour | default: '#fff' }};
+              }
+            }
+          </style>
+        </div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="o-section">
+    {% render "section-header", title: collection.title %}
+  </div>
+{% endif %}
+
+{% render 'breadcrumb', page: page, collection: collection, product: product, blog: blog %}
+
+{% assign desc = collection.description | strip_html %}
+{% assign splitdesc = desc | split: ' ' %}
+{% assign descsize = splitdesc | size %}
+
+<script> console.log({{ descsize | json }}) </script>
+
+{% if collection.description != blank %}
+  <div class="l-constrained l-medium">
+    <div class="c-collection-description">
+    {% if descsize < 20 %}
+      <h2 class="c-collection__sub-heading">{{ collection.description }}</h2>
+    {% else %}
+      <div class="c-excerpt js-excerpt-new">
+        <h2 class="c-collection__sub-heading">
+          <div class="c-excerpt__preview">
+            {{ collection.description | truncatewords: 20, "...<a href='#' class='c-excerpt__btn c-excerpt__btn--more'>read more</a>" }}
+          </div>
+          <div class="c-excerpt__crop">
+            {{ collection.description }}
+            <a href='#' class='c-excerpt__btn c-excerpt__btn--less'>{{ "excerpt.read_less" | t }}</a>
+          </div>
+        </h2>
+      </div>
+    {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% if collection.metafields.featured_collections.collections != blank %}
+  <div class="l-constrained l-wide">
+    <div class="c-collection__featured-links">
+      <h2 class="t-h5">{{ 'collections.general.most_popular_collections' | t }}</h2>
+      <div class="c-collection__featured-links-items">
+        {% assign colls = collection.metafields.featured_collections.collections | split: '|' %}
+        {% for coll in colls %}
+          {% assign item = collections[coll] %}
+          <a class="c-collection__featured-links-link" href="{{ item.url }}">{{ item.title }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="o-section o-section--gapless-mobile o-section--gapless">
+  <div class="o-section__content">
+    <div class="l-constrained l-wide">
+      <div class="algolia-shopify-instantsearch">
+        {% if collection.products_count > 0 %}
+          {% paginate collection.products by settings.collection_pagination %}
+            <div class="l-cols">
+              <div class="l-col w-1-4@md w-1-5@lg">
+                {% render 'collection-sidebar' %}
+              </div>
+              <div class="l-col w-3-4@md w-4-5@lg">
+                <div class="l-grid">
+                  {% for product in collection.products %}
+                    <div class="w-1-1@xs w-1-2@ph w-1-3@md u-mgn-b-m@xs">
+                      {% render 'product-card' with product as product %}
+                    </div>
+                  {% endfor %}
+                </div>
+                {% if paginate.pages > 1 %}
+                  {% render 'pagination', paginate: paginate, border: true %}
+                {% endif %}
+              </div>
+            </div>
+          {% endpaginate %}
+        {% else %}
+          <div class="t-align-center u-pad-v-l@xs u-pad-v-xl@md u-mgn-v-xl@md">
+            <p>{{ "collections.general.no_matches" | t }}</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<span class="js-collection-tile d-none" data-listing-position="{{ collection.metafields.collection_tile.position | default: 15 }}" data-listing-image="{% if collection.metafields.collection_tile.image != blank %}{{ collection.metafields.collection_tile.image[0].cloudinary_src | append: 'w_450' }}{% else %}{{ 'scrolling.jpeg' | asset_url }}{% endif %}" data-listing-link="{{ collection.metafields.collection_tile.link | default: '#' }}"></span>
+
+<script src="https://player.vimeo.com/api/player.js" defer></script>
